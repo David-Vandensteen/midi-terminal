@@ -1,0 +1,33 @@
+{
+  "name": "midi-terminal",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "cli": "node bin/midi-terminal.js",
+    "start": "node src/index.js",
+    "serve": "nodemon --watch src -e js src/index.js",
+    "lint": "eslint src test bin"
+  },
+  "author": "David Vandensteen <dvandensteen@gmail.com>",
+  "license": "MIT",
+  "imports": {
+    "#src/*": "./src/*.js"
+  },
+  "dependencies": {
+    "custom-console-log": "github:David-Vandensteen/custom-console-log#release/1.0.0",
+    "easymidi": "^3.1.0",
+    "midi-normalizer": "github:David-Vandensteen/midi-normalizer#release/1.0.0",
+    "net-keyboard": "git@github.com:David-Vandensteen/net-keyboard.git#release/1.0.0",
+    "terminal-kit": "^3.0.1",
+    "yaml": "^2.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.50.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-import": "^2.28.1",
+    "nodemon": "^3.0.1"
+  }
+}

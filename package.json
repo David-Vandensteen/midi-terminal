@@ -16,10 +16,8 @@
     "#src/*": "./src/*.js"
   },
   "dependencies": {
-    "custom-console-log": "github:David-Vandensteen/custom-console-log#release/1.0.0",
     "easymidi": "^3.1.0",
     "midi-normalizer": "github:David-Vandensteen/midi-normalizer#release/1.0.0",
-    "net-keyboard": "git@github.com:David-Vandensteen/net-keyboard.git#release/1.0.0",
     "terminal-kit": "^3.0.1",
     "yaml": "^2.3.2"
   },

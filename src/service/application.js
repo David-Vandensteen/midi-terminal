@@ -1,14 +1,15 @@
 /* eslint-disable lines-between-class-members */
 import easymidi from 'easymidi';
 import terminalKit from 'terminal-kit';
+import { MidiNormalizer } from 'midi-normalizer';
 
-const { log } = console;
+const { log, error } = console;
 const { terminal } = terminalKit;
 
 export default class ApplicationService {
   #midiOutDeviceName;
   #midiOutInstance;
-  #midiOutChannel = 0;
+  #midiChannel = 0;
   #midiController = 0;
 
   static start() {
@@ -31,53 +32,55 @@ export default class ApplicationService {
   }
 
   async #command() {
+    terminal.green('\nSelected device : ', this.#midiOutDeviceName, '\n');
+    terminal.green('Selected channel : ', this.#midiChannel, '\n');
+    terminal.green('Selected controller : ', this.#midiController, '\n\n');
     terminal.red('Enter command\n');
-    terminal.green('Selected channel : ', this.#midiOutChannel, '\n');
-    terminal.green('Selected controller : ', this.#midiController, '\n');
     terminal.inputField(async (err, inputCommand) => {
       try {
         const inputNumber = Number(inputCommand);
-
         if (!Number.isNaN(inputNumber) && Number.isInteger(inputNumber)) {
-          console.log('value :', inputNumber);
-          await this.#sendMidiMessage(inputNumber);
-          await this.#command();
+          this.#handleNumberCommand(inputNumber);
         } else {
-          await this.#processTextCommand(inputCommand);
+          await this.#handleTextCommand(inputCommand);
         }
-      } catch (error) {
-        console.error('Error processing command:', error.message);
+      } catch (commandError) {
+        error('Error processing command:', commandError.message);
       }
     });
   }
 
-  async #processTextCommand(inputCommand) {
+  async #handleNumberCommand(inputNumber) {
+    await this.#sendMidiMessage(inputNumber);
+    await this.#command();
+  }
+
+  async #handleTextCommand(inputCommand) {
     const regex = /([a-zA-Z]+)(\d+)/;
     const matchResult = inputCommand.match(regex);
 
     if (matchResult) {
       const commandNumber = matchResult[1].toUpperCase();
-      const commandValue = matchResult[2];
+      const commandValue = Number.parseInt(matchResult[2], 10);
 
-      if (commandNumber === 'C') this.#midiOutChannel = commandValue;
-      if (commandNumber === 'CC') this.#midiController = commandValue;
-
-      console.log('command :', commandNumber);
-      console.log('value :', commandValue);
+      if (commandNumber === 'C') this.#midiChannel = MidiNormalizer.channel(commandValue);
+      if (commandNumber === 'CC') this.#midiController = MidiNormalizer.controller(commandValue);
 
       await this.#command();
     } else {
-      console.log('Invalid command format.');
+      error('Invalid command format.');
       await this.#command();
     }
   }
 
   async #sendMidiMessage(value) {
-    this.#midiOutInstance.send('cc', {
+    const midiMessage = {
+      channel: this.#midiChannel,
       controller: this.#midiController,
-      value,
-      channel: this.#midiOutChannel,
-    });
+      value: MidiNormalizer.value(value),
+    };
+    log('\nsend midi :', midiMessage);
+    this.#midiOutInstance.send('cc', midiMessage);
   }
 
   #selectMidiOutDevice() {
@@ -92,8 +95,9 @@ export default class ApplicationService {
         this.#midiOutDeviceName = easymidi.getOutputs()[deviceNumber];
         this.#midiOutInstance = new easymidi.Output(this.#midiOutDeviceName);
         await this.#command();
-      } catch (error) {
-        console.error('Error selecting MIDI device:', error.message);
+      } catch (selecMidiOutDeviceError) {
+        error('Error selecting MIDI device:', selecMidiOutDeviceError.message);
+        process.exit(1);
       }
     });
   }

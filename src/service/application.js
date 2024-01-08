@@ -7,13 +7,19 @@ const { log, error } = console;
 const { terminal } = terminalKit;
 
 export default class ApplicationService {
+  #base = 0;
   #midiOutDeviceName;
   #midiOutInstance;
   #midiChannel = 0;
   #midiController = 0;
 
-  static start() {
-    const applicationInstance = new ApplicationService();
+  constructor({ base } = {}) {
+    if (base === undefined) this.#base = 0;
+    else this.#base = base;
+  }
+
+  static start({ base } = {}) {
+    const applicationInstance = new ApplicationService({ base });
     terminal.on('key', (name) => {
       if (name === 'CTRL_C') {
         log('Exiting ...');
@@ -63,8 +69,8 @@ export default class ApplicationService {
       const commandNumber = matchResult[1].toUpperCase();
       const commandValue = Number.parseInt(matchResult[2], 10);
 
-      if (commandNumber === 'C') this.#midiChannel = MidiNormalizer.channel(commandValue);
-      if (commandNumber === 'CC') this.#midiController = MidiNormalizer.controller(commandValue);
+      if (commandNumber === 'C') this.#midiChannel = MidiNormalizer.channel(commandValue, { base: this.#base });
+      if (commandNumber === 'CC') this.#midiController = MidiNormalizer.controller(commandValue, { base: this.#base });
 
       await this.#command();
     } else {
